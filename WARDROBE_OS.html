@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>WARDROBE OS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E👔%3C/text%3E%3C/svg%3E">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-firestore-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-analytics-compat.min.js"></script>
+<style>
+:root{--bg:#F5F5F7;--s:#fff;--t:#1d1d1f;--t2:#6e6e73;--ln:#e5e5ea;--btn:#000;--bt:#fff;--nav:rgba(255,255,255,.86);--ok:#1f8a4c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+:root[data-theme=dark]{--bg:#000;--s:#1c1c1e;--t:#f5f5f7;--t2:#98989d;--ln:#38383a;--btn:#f5f5f7;--bt:#000;--nav:rgba(28,28,30,.86)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#000;--s:#1c1c1e;--t:#f5f5f7;--t2:#98989d;--ln:#38383a;--btn:#f5f5f7;--bt:#000;--nav:rgba(28,28,30,.86)}}
+*{box-sizing:border-box;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--t);font:15px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",Inter,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+h1{font-size:30px;letter-spacing:-.02em;font-weight:700}h2{font-size:20px;letter-spacing:-.01em;font-weight:650;margin-bottom:14px}
+.sub{color:var(--t2)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;background:var(--nav);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--ln);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+nav .br{display:none}
+nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;color:var(--t2);font:inherit;font-size:10.5px;padding:6px 0;cursor:pointer}
+nav button.on{color:var(--t)}
+main{padding:24px 20px calc(100px + env(safe-area-inset-bottom,0px))}
+.wrap{max-width:960px;margin:auto}
+@media(min-width:800px){nav{top:0;bottom:auto;width:220px;flex-direction:column;border-top:0;border-right:1px solid var(--ln);padding:calc(24px + env(safe-area-inset-top,0px)) 12px 24px}
+nav .br{display:block;font-weight:700;letter-spacing:.04em;padding:0 12px 20px}
+nav button{flex:none;flex-direction:row;gap:10px;font-size:15px;padding:10px 12px;border-radius:12px;text-align:left}
+nav button.on{background:var(--bg)}nav .set{margin-top:auto}
+main{margin-left:220px;padding:36px 32px 60px}}
+.c{background:var(--s);border-radius:22px;padding:20px;box-shadow:0 1px 2px rgba(0,0,0,.05);margin-bottom:16px}
+.b{background:var(--btn);color:var(--bt);border:0;border-radius:980px;padding:10px 18px;font:inherit;font-weight:550;cursor:pointer;display:inline-flex;gap:7px;align-items:center;transition:transform .15s,opacity .15s}
+.b:active{transform:scale(.96)}.b.g{background:transparent;color:var(--t);border:1px solid var(--ln)}.b.sm{padding:6px 12px;font-size:13px}
+.ib{border:0;background:none;color:var(--t2);cursor:pointer;padding:6px;display:inline-flex}.ib.on{color:#e0245e}
+.in{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--ln);background:var(--s);color:var(--t);font:inherit;font-size:16px}
+.lb{display:block;color:var(--t2);font-size:13px;margin:16px 0 6px}
+.row{display:flex;gap:10px 12px;align-items:center;flex-wrap:wrap}.sp{justify-content:space-between}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gr{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px 14px}
+.ph{width:100%;aspect-ratio:3/4;border-radius:14px;background:var(--bg);object-fit:cover;display:flex;align-items:center;justify-content:center;color:var(--t2)}
+.it{cursor:pointer;position:relative}.it .n{font-weight:600;margin-top:8px;font-size:14px}
+.it .fv{position:absolute;top:6px;right:6px;background:var(--nav);border-radius:50%}
+.li{display:flex;gap:12px;align-items:center;cursor:pointer;padding:8px 0;border-bottom:1px solid var(--ln)}.li .ph{width:56px}
+.hero{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(110px,1fr))}
+.hero .l{font-size:12px;color:var(--t2);margin-top:6px}
+.tmp{font-size:54px;font-weight:300;letter-spacing:-.03em;line-height:1}
+.st{display:flex;gap:6px}.st .sm{width:54px}
+.bar{display:flex;align-items:center;gap:10px;margin:7px 0;font-size:13px}.bar i{display:block;height:8px;border-radius:4px;background:var(--btn);min-width:3px}.bar span:first-child{width:110px;color:var(--t2)}
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:14px}.kp .c{margin:0}.kp b{font-size:26px;letter-spacing:-.02em;display:block}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.md{background:var(--s);width:100%;max-width:520px;max-height:92%;overflow:auto;border-radius:26px 26px 0 0;padding:22px;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px));animation:up .25s ease}
+@keyframes up{from{transform:translateY(24px);opacity:0}}
+@media(min-width:800px){.ov{align-items:center}.md{border-radius:26px}}
+#ts{position:fixed;left:0;right:0;bottom:calc(88px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:8px;z-index:60;pointer-events:none}
+.tt{background:var(--btn);color:var(--bt);padding:10px 16px;border-radius:980px;font-size:14px;pointer-events:auto;animation:up .2s}
+.tt button{background:none;border:0;color:inherit;text-decoration:underline;font:inherit;margin-left:8px;cursor:pointer}
+.em{text-align:center;color:var(--t2);padding:40px 10px}.em svg{margin-bottom:10px}.em p{margin:0 auto 12px;max-width:320px}.em .b{margin-top:0}
+.tag{font-size:12px;color:var(--t2);background:var(--bg);border-radius:8px;padding:2px 8px}
+.lp{max-width:960px;margin:auto;padding:20px 24px calc(40px + env(safe-area-inset-bottom,0px))}
+.lp .h1{text-align:center;padding:12vh 0 9vh}.lp .big{font-size:clamp(40px,11vw,72px);letter-spacing:-.04em;line-height:1.02}
+.lp .ey{letter-spacing:.18em;font-size:12px;margin-bottom:20px}.lp .ld{font-size:19px;margin:20px auto 32px;max-width:480px}
+.lp .g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}.lp .g3 .c{margin:0}
+.lp .ab{text-align:center;max-width:560px;margin:64px auto 40px}.lp footer{text-align:center;font-size:13px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div><div id="mo"></div><div id="ts"></div>
+<script>
+const $=s=>document.querySelector(s);
+const E=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const P={sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/>',
+shirt:'<path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/>',
+layers:'<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+chart:'<path d="M12 20V10M18 20V4M6 20v-4"/>',
+set:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+plus:'<path d="M5 12h14M12 5v14"/>',
+heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+trash:'<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+check:'<path d="M20 6 9 17l-5-5"/>',
+drop:'<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>',
+undo:'<path d="M3 7v6h6M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>',
+ref:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5"/>',
+grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>'};
+const I=(n,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
+
+/* ---------- Данные ---------- */
+const CATS=['Верхняя одежда','Футболки','Лонгсливы','Свитера','Худи','Брюки','Джинсы','Обувь','Аксессуары'];
+const SEAS=['Весна','Лето','Осень','Зима','Демисезонный','Всесезонный'];
+const COLS={'Чёрный':'#111','Белый':'#f2f2f2','Серый':'#9a9a9f','Бежевый':'#d8c3a5','Синий':'#2c4a7a','Коричневый':'#7a5230','Зелёный':'#4f7a4a','Красный':'#b3322e','Другой':'#c8a2d6'};
+const NEUT=['Чёрный','Белый','Серый','Бежевый','Синий','Коричневый'];
+const SLOT={outer:['Верхняя одежда'],top:['Футболки','Лонгсливы','Свитера','Худи'],bottom:['Брюки','Джинсы'],shoes:['Обувь'],acc:['Аксессуары']};
+const SN={outer:'Верхняя одежда',top:'Верх',bottom:'Низ',shoes:'Обувь',acc:'Аксессуары'};
+const SLOTS=Object.keys(SLOT);
+const slotOf=c=>SLOTS.find(k=>SLOT[k].includes(c));
+const CR={'Верхняя одежда':[-40,14],'Футболки':[16,45],'Лонгсливы':[8,24],'Свитера':[-20,15],'Худи':[2,18],'Брюки':[-40,45],'Джинсы':[-40,38],'Обувь':[-40,45],'Аксессуары':[-40,45]};
+const SR={'Весна':[3,20],'Лето':[15,45],'Осень':[3,20],'Зима':[-40,8],'Демисезонный':[0,22],'Всесезонный':[-40,45]};
+const CITIES=[['Алматы',43.238,76.945],['Астана',51.169,71.449],['Москва',55.751,37.618],['Бишкек',42.875,74.604],['Ташкент',41.299,69.24]];
+const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+const day=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const money=n=>Math.round(n).toLocaleString('ru-RU')+' ₸';
+let S={v:2,name:'',theme:'light',city:0,items:[],outfits:[],history:[]};
+let V='today',G=null,WX=null,WS='load',MAN=null,PH='',CB=null,W={q:'',cat:'',sort:'new',view:'grid'},OT='saved',LAND=true;
+
+/* ---------- IndexedDB ---------- */
+let DBP=null;
+const idb=()=>DBP||(DBP=new Promise((res,rej)=>{const r=indexedDB.open('wardrobe-os',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
+const kvget=async k=>{const d=await idb();return new Promise((res,rej)=>{const q=d.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})};
+const kvset=async(k,v)=>{const d=await idb();return new Promise((res,rej)=>{const t=d.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})};
+const blank=()=>({v:3,name:'',theme:'light',city:'auto',items:[],outfits:[],history:[]});
+firebase.initializeApp({apiKey:"AIzaSyDhLw-iYwrLruJp4cvG1mBI2jN-kpN3TDc",authDomain:"weardrop-f1c31.firebaseapp.com",databaseURL:"https://weardrop-f1c31-default-rtdb.firebaseio.com",projectId:"weardrop-f1c31",storageBucket:"weardrop-f1c31.firebasestorage.app",messagingSenderId:"17755802437",appId:"1:17755802437:web:131ea36cae8fcfeea68c2c",measurementId:"G-FVMV8L1VNJ"});
+const auth=firebase.auth(),db=firebase.firestore();
+if(location.protocol==='file:')auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>auth.setPersistence(firebase.auth.Auth.Persistence.NONE)).catch(()=>{});
+try{firebase.analytics()}catch(e){}
+let AU=null,AR=false,AM='in',OK=false,SV={},svT;
+const uref=()=>db.collection('users').doc(AU.uid);
+const save=()=>{clearTimeout(svT);svT=setTimeout(sync,400)};
+async function sync(){
+  if(!AU||!OK)return;clearTimeout(svT);
+  try{const r=uref(),b=db.batch(),{items,...m}=S;b.set(r,JSON.parse(JSON.stringify(m)));
+    const seen=new Set();
+    S.items.forEach(i=>{seen.add(i.id);const j=JSON.stringify(i);if(SV[i.id]!==j){b.set(r.collection('items').doc(i.id),JSON.parse(j));SV[i.id]=j}});
+    Object.keys(SV).forEach(k=>{if(!seen.has(k)){b.delete(r.collection('items').doc(k));delete SV[k]}});
+    await b.commit()}
+  catch(e){SV={};toast('Не удалось сохранить в облако. Проверьте сеть и правила Firestore')}
+}
+async function loadUser(){
+  const r=uref(),[m,it]=await Promise.all([r.get(),r.collection('items').get()]);
+  S=blank();SV={};
+  if(m.exists||!it.empty){const d=m.exists?m.data():{};d.items=it.docs.map(x=>x.data());S=migrate(d);S.items.forEach(i=>SV[i.id]=JSON.stringify(i))}
+  else{const l=await kvget('state').catch(()=>null);if(l&&l.items&&l.items.length){S=migrate(l);kvset('state',null).catch(()=>{})}}
+  if(!S.name&&AU.displayName)S.name=AU.displayName.split(' ')[0];
+  OK=true;save();
+}
+const AE={'auth/invalid-email':'Некорректная почта','auth/invalid-credential':'Неверная почта или пароль','auth/wrong-password':'Неверная почта или пароль','auth/user-not-found':'Неверная почта или пароль','auth/email-already-in-use':'Эта почта уже зарегистрирована. Попробуйте войти','auth/weak-password':'Пароль слишком короткий (минимум 6 символов)','auth/too-many-requests':'Слишком много попыток. Попробуйте позже','auth/network-request-failed':'Нет сети','auth/unauthorized-domain':'Этот домен не добавлен в Authorized domains в Firebase','auth/popup-closed-by-user':'Окно входа закрыто'};
+const aerr=r=>AE[r.code]||'Ошибка: '+(r.code||r.message);
+function authModal(m){AM=m;const up=m==='up';
+  modal(`<h2>${up?'Создать аккаунт':'Вход'}</h2>
+  ${location.protocol==='file:'?'<p class="sub" style="font-size:13px">Вход через Google работает только на хостинге или localhost. Из файла вход по почте.</p>':'<button class="b g" data-a="gg" style="width:100%;justify-content:center"><b>G</b>Продолжить с Google</button><div class="sub" style="text-align:center;margin-top:14px;font-size:13px">или по почте</div>'}
+  <label class="lb">Почта</label><input class="in" id="ae" type="email" autocomplete="email">
+  <label class="lb">Пароль</label><input class="in" id="ap" type="password" autocomplete="${up?'new-password':'current-password'}" placeholder="Минимум 6 символов">
+  <p id="aerr" style="color:#d33;font-size:13px;margin-top:10px"></p>
+  <div class="row" style="margin-top:12px"><button class="b" data-a="sub">${up?'Зарегистрироваться':'Войти'}</button><button class="b g" data-a="cl">Отмена</button></div>
+  <div class="row" style="margin-top:14px"><button class="ib" style="font-size:13px" data-a="swm">${up?'Уже есть аккаунт? Войти':'Нет аккаунта? Создать'}</button>${up?'':'<button class="ib" style="font-size:13px" data-a="fg">Забыли пароль?</button>'}</div>`);
+}
+async function submit(){
+  const e=$('#ae').value.trim(),p=$('#ap').value,x=$('#aerr');
+  if(!e||!p){x.textContent='Введите почту и пароль';return}
+  try{AM==='up'?await auth.createUserWithEmailAndPassword(e,p):await auth.signInWithEmailAndPassword(e,p)}catch(r){x.textContent=aerr(r)}
+}
+async function google(){
+  const x=$('#aerr'),pr=new firebase.auth.GoogleAuthProvider();
+  try{await auth.signInWithPopup(pr)}catch(r){
+    if(r.code==='auth/popup-blocked'||r.code==='auth/operation-not-supported-in-this-environment')auth.signInWithRedirect(pr);
+    else if(r.code!=='auth/cancelled-popup-request')x.textContent=aerr(r)}
+}
+async function forgot(){
+  const e=$('#ae').value.trim(),x=$('#aerr');if(!e){x.textContent='Введите почту выше';return}
+  try{await auth.sendPasswordResetEmail(e);x.style.color='var(--ok)';x.textContent='Письмо для сброса пароля отправлено'}catch(r){x.style.color='#d33';x.textContent=aerr(r)}
+}
+function migrate(d){d=d||{};d.items=(d.items||[]).map(i=>({tags:[],notes:'',wears:0,fav:false,laundry:false,photo:'',price:null,...i}));return{...S,...d,theme:(d.v||0)<2?'light':d.theme,city:(d.v||0)<3||d.city==null?'auto':d.city,v:3}}
+
+/* ---------- Погода ---------- */
+const FILE=location.protocol==='file:';
+let GEO=null;
+const cname=()=>WX&&WX.name||(S.city==='auto'?'Моя погода':CITIES[S.city][0]);
+const jget=async(u,ms=8000)=>{const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(u,{signal:c.signal});if(!r.ok)throw 0;return await r.json()}finally{clearTimeout(t)}};
+async function place(){
+  if(S.city!=='auto'){const c=CITIES[S.city]||CITIES[0];return{name:c[0],lat:c[1],lon:c[2]}}
+  if(GEO&&Date.now()-GEO.at<36e5)return GEO;
+  let g=null;
+  try{const p=await new Promise((res,rej)=>navigator.geolocation?navigator.geolocation.getCurrentPosition(res,rej,{timeout:8000,maximumAge:6e5}):rej());
+    g={lat:p.coords.latitude,lon:p.coords.longitude,name:'Моё местоположение'};
+    try{const j=await jget(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${g.lat}&longitude=${g.lon}&localityLanguage=ru`);g.name=j.city||j.locality||g.name}catch(e){}}catch(e){}
+  if(!g){try{const j=await jget('https://ipwho.is/');if(j.latitude)g={lat:j.latitude,lon:j.longitude,name:j.city||'Моё местоположение'}}catch(e){}}
+  if(!g){const o=await kvget('geo').catch(()=>null);if(o)return o;throw{code:'no_geo'}}
+  GEO={...g,at:Date.now()};kvset('geo',GEO).catch(()=>{});return GEO;
+}
+async function loadW(){
+  WS='load';
+  try{
+    const p=await place();
+    const j=await jget(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation&timezone=auto&forecast_days=2`);
+    const c=j.current,h=j.hourly,k=Math.max(0,h.time.findIndex(t=>t.slice(0,13)>=c.time.slice(0,13)));
+    const hs=h.time.slice(k,k+10).map((t,n)=>({h:+t.slice(11,13),t:h.temperature_2m[k+n],f:h.apparent_temperature[k+n],p:h.precipitation_probability[k+n]||0,r:h.precipitation[k+n]||0}));
+    WX={city:S.city,name:p.name,at:Date.now(),cur:{t:c.temperature_2m,f:c.apparent_temperature,hum:c.relative_humidity_2m,w:c.wind_speed_10m,pr:c.precipitation||0},hrs:hs};
+    WS='ok';kvset('wx',WX).catch(()=>{});
+  }catch(e){const c0=await kvget('wx').catch(()=>null);
+    if(c0&&c0.cur&&c0.city===S.city&&Date.now()-c0.at<108e5){WX=c0;WS='cache'}else{WX=null;WS=e&&e.code==='no_geo'?'deny':'none'}}
+  G=null;render();
+}
+function wd(){
+  if(WX&&WX.cur){const c=WX.cur,n=WX.hrs;
+    return{t:c.t,f:c.f,hum:c.hum,w:c.w,pr:c.pr,pp:Math.max(0,...n.map(x=>x.p)),hrs:n,min:Math.min(c.f,...n.slice(0,6).map(x=>x.f))}}
+  if(MAN!=null)return{t:MAN,f:MAN,man:1,pr:0,pp:0};
+  return null;
+}
+const effT=d=>d.hrs?Math.round(Math.min(d.f,(d.f+d.min)/2)):Math.round(d.f);
+const hhmm=ts=>new Date(ts).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+
+/* ---------- Подбор образов ---------- */
+function rng(i){const a=CR[i.cat],b=SR[i.season]||[-40,45],lo=Math.max(a[0],b[0]),hi=Math.min(a[1],b[1]);return lo<=hi?[lo,hi]:a}
+function fitd(i,t){const r=rng(i);return t<r[0]?r[0]-t:t>r[1]?t-r[1]:0}
+function lastW(id){const h=S.history.find(x=>x.ids.includes(id));return h?Math.floor((Date.now()-new Date(h.date+'T12:00').getTime())/864e5):null}
+function gen(t,rain){
+  const need=['top','bottom','shoes'];if(t<13||(rain&&t<18))need.unshift('outer');
+  const sc=i=>{let s=-fitd(i,t)*2+(i.fav?1:0)+(i.wears?0:.5);const l=lastW(i.id);if(l!=null&&l<3)s-=2;return s};
+  const pool=s=>S.items.filter(i=>!i.laundry&&slotOf(i.cat)===s&&fitd(i,t)<=4).sort((a,b)=>sc(b)-sc(a));
+  const missing=need.filter(s=>!pool(s).length);
+  if(missing.length)return{list:[],missing};
+  const PL={};SLOTS.forEach(s=>PL[s]=pool(s).slice(0,4));
+  const seen=new Set(),out=[],recent=new Set(S.history.filter(h=>Date.now()-new Date(h.date+'T12:00').getTime()<6048e5).map(h=>h.sig));
+  for(let n=0;n<50&&out.length<6;n++){
+    const c=[];
+    for(const s of SLOTS){const p=PL[s];if(!p.length)continue;
+      if(s==='outer'&&!need.includes('outer')&&(t>=18||n%2))continue;
+      if(s==='acc'&&n&&Math.random()<.4)continue;
+      c.push(p[n?Math.floor(Math.random()**2*p.length):0])}
+    const sig=c.map(i=>i.id).sort().join();if(seen.has(sig))continue;seen.add(sig);
+    const cl=new Set(c.map(i=>i.color).filter(x=>!NEUT.includes(x)));
+    let s=c.reduce((a,i)=>a+sc(i),0)-3*Math.max(0,cl.size-1)-(recent.has(sig)?5:0);
+    out.push({items:c,s});
+  }
+  out.sort((a,b)=>b.s-a.s);
+  return{list:out,missing:[]};
+}
+function why(c,t,rain){
+  const p=[`Эффективная температура около ${t}°C с учётом вечера`+(rain?', возможны осадки':'')+'.'];
+  const o=c.items.find(i=>slotOf(i.cat)==='outer');
+  if(o)p.push(`«${o.name}» защитит от прохлады.`);else if(t>=13)p.push('Верхняя одежда не нужна.');
+  const cl=new Set(c.items.map(i=>i.color).filter(x=>!NEUT.includes(x)));
+  p.push(cl.size?`Цветовой акцент: ${[...cl].join(', ').toLowerCase()}.`:'Спокойная палитра, цвета хорошо сочетаются.');
+  const old=c.items.find(i=>!i.wears||(lastW(i.id)||0)>14);
+  if(old)p.push(`Вещь «${old.name}» давно не использовалась.`);
+  return p.join(' ');
+}
+
+/* ---------- Действия ---------- */
+function wear(ids){
+  const sig=[...ids].sort().join(),d=day();
+  if(S.history.some(h=>h.date===d&&h.sig===sig))return toast('Этот образ уже отмечен сегодня');
+  const h={id:uid(),date:d,sig,ids:[...ids]};S.history.unshift(h);
+  ids.forEach(id=>{const i=S.items.find(x=>x.id===id);if(i)i.wears++});
+  save();G=G&&{...G};toast('Образ записан в историю',()=>undo(h.id));render();
+}
+function undo(hid){
+  const k=S.history.findIndex(h=>h.id===hid);if(k<0)return;
+  const h=S.history.splice(k,1)[0];
+  h.ids.forEach(id=>{const i=S.items.find(x=>x.id===id);if(i&&i.wears>0)i.wears--});
+  save();toast('Запись отменена');render();
+}
+function toast(m,fn){
+  const d=document.createElement('div');d.className='tt';d.textContent=m;
+  if(fn){const b=document.createElement('button');b.textContent='Отменить';b.onclick=()=>{fn();d.remove()};d.appendChild(b)}
+  $('#ts').appendChild(d);setTimeout(()=>d.remove(),5000);
+}
+function modal(h){$('#mo').innerHTML=`<div class="ov"><div class="md">${h}</div></div>`}
+function closeM(){$('#mo').innerHTML=''}
+function ask(msg,fn){CB=fn;modal(`<h2>Подтверждение</h2><p class="sub">${E(msg)}</p><div class="row" style="margin-top:18px"><button class="b" data-a="yes">Подтвердить</button><button class="b g" data-a="cl">Отмена</button></div>`)}
+const gI=id=>S.items.find(x=>x.id===id);
+function applyTheme(){const r=document.documentElement;S.theme==='system'?r.removeAttribute('data-theme'):r.setAttribute('data-theme',S.theme)}
+
+/* ---------- Представления ---------- */
+const thumb=i=>i.photo?`<img class="ph" src="${i.photo}" alt="${E(i.name)}">`:`<div class="ph" style="background:${COLS[i.color]||'#ddd'}33">${I('shirt',28)}</div>`;
+const strip=ids=>`<div class="st">${ids.map(gI).filter(Boolean).map(i=>`<div class="sm">${thumb(i)}</div>`).join('')}</div>`;
+const empty=(ic,t,b)=>`<div class="em">${I(ic,36)}<p>${t}</p>${b||''}</div>`;
+function greet(){const h=new Date().getHours();return(h>=5&&h<12?'Доброе утро':h>=12&&h<18?'Добрый день':'Добрый вечер')+', '+E(S.name)+'!'}
+
+function vToday(){
+  const date=new Date().toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
+  const d=wd();let wc='',oc='';
+  if(!d){
+    wc=`<div class="c"><h2>Погода недоступна</h2><p class="sub">${WS==='load'?'Загружаем данные…':WS==='deny'?'Не удалось определить местоположение. Разрешите доступ к геолокации и нажмите «Обновить» или выберите город в настройках.':'Не удалось получить актуальную погоду, сохранённых данных нет. Введите температуру на улице вручную.'}</p>
+    <div class="row" style="margin-top:12px"><input class="in" id="mt" type="number" inputmode="numeric" placeholder="Температура, °C" style="width:170px"><button class="b" data-a="man">Применить</button><button class="b g" data-a="refresh">${I('ref',16)}Обновить</button></div></div>`;
+  }else{
+    const t=effT(d);
+    const note=d.man?'Температура введена вручную':WS==='cache'?`Нет сети. Данные от ${hhmm(WX.at)}, могут быть неточными`:`Open-Meteo, обновлено ${hhmm(WX.at)}`;
+    wc=`<div class="c"><div class="row sp"><div><div class="sub">${E(cname())}</div><div class="tmp">${Math.round(d.t)}°</div>${d.man?'':`<div class="sub">Ощущается как ${Math.round(d.f)}°</div>`}</div>
+    <button class="b g sm" data-a="refresh">${I('ref',15)}Обновить</button></div>
+    ${d.man?'':`<div class="hero" style="margin-top:14px"><div><b>${Math.round(d.w)} км/ч</b><div class="l">Ветер</div></div><div><b>${d.hum}%</b><div class="l">Влажность</div></div><div><b>${d.pp}%</b><div class="l">Осадки (макс.)</div></div></div>
+    <div class="hero" style="margin-top:12px">${[2,5,8].map(i=>d.hrs[i]).filter(Boolean).map(h=>`<div><b>${Math.round(h.t)}°</b><div class="l">В ${h.h}:00</div></div>`).join('')}</div>`}
+    <p class="sub" style="font-size:12px;margin-top:12px">${note}</p></div>`;
+    const rain=d.pr>0||d.pp>=50;
+    if(!S.items.length)oc=`<div class="c">${empty('shirt','Гардероб пуст. Добавьте вещи, и мы подберём образ на сегодня.',`<button class="b" data-a="go" data-id="wardrobe">Открыть гардероб</button>`)}</div>`;
+    else{
+      if(!G||G.t!==t)G={t,idx:0,...gen(t,rain)};
+      if(G.missing.length)oc=`<div class="c"><h2>Образ на сегодня</h2><p>Не хватает: <b>${G.missing.map(s=>SN[s].toLowerCase()).join(', ')}</b>. В гардеробе нет подходящих вещей для ${t}°C (в стирке вещи не учитываются).</p></div>`;
+      else{const c=G.list[G.idx%G.list.length];
+        oc=`<div class="c"><div class="row sp"><h2 style="margin:0">Образ на сегодня</h2><span class="sub">${G.idx%G.list.length+1} из ${G.list.length}</span></div>
+        <div class="gr" style="margin:14px 0;grid-template-columns:repeat(auto-fill,minmax(120px,1fr))">${c.items.map(i=>`<div>${thumb(i)}<div class="sub" style="font-size:12px;margin-top:4px">${SN[slotOf(i.cat)]}: ${E(i.name)}</div></div>`).join('')}</div>
+        <p class="sub">${E(why(c,t,rain))}</p>
+        <div class="row" style="margin-top:14px"><button class="b" data-a="wearG">${I('check',16)}Надеть</button><button class="b g" data-a="saveG">Сохранить</button><button class="b g" data-a="next">Другой образ</button></div></div>`;}
+    }
+  }
+  return`<h1>${greet()}</h1><p class="sub" style="margin:6px 0 22px;text-transform:capitalize">${date}</p>${oc}${wc}`;
+}
+
+function wlist(){
+  let a=S.items.filter(i=>{const q=W.q.toLowerCase();return(!W.cat||i.cat===W.cat)&&(!q||[i.name,i.brand,i.tags.join(' ')].join(' ').toLowerCase().includes(q))});
+  const so={new:(x,y)=>y.created-x.created,name:(x,y)=>x.name.localeCompare(y.name,'ru'),price:(x,y)=>(y.price||0)-(x.price||0),wears:(x,y)=>y.wears-x.wears};
+  a.sort(so[W.sort]);
+  if(!S.items.length)return empty('shirt','В гардеробе пока ничего нет. Добавьте первую вещь.',`<button class="b" data-a="add">${I('plus',16)}Добавить вещь</button>`);
+  if(!a.length)return empty('shirt','Ничего не найдено. Измените поиск или фильтры.');
+  const fv=i=>`<button class="ib fv${i.fav?' on':''}" data-a="fav" data-id="${i.id}" aria-label="В избранное">${I('heart',18)}</button>`;
+  return W.view==='grid'?`<div class="gr">${a.map(i=>`<div class="it" data-a="edit" data-id="${i.id}">${thumb(i)}${fv(i)}<div class="n">${E(i.name)}</div><div class="sub" style="font-size:12.5px">${E(i.cat)}, ${E(i.color.toLowerCase())}${i.laundry?' · в стирке':''}</div></div>`).join('')}</div>`
+  :a.map(i=>`<div class="li" data-a="edit" data-id="${i.id}">${thumb(i)}<div style="flex:1"><div style="font-weight:600">${E(i.name)}</div><div class="sub" style="font-size:12.5px">${E(i.cat)} · ${E(i.season)}${i.brand?' · '+E(i.brand):''}${i.laundry?' · в стирке':''}</div></div><span class="sub">${i.wears} раз</span>${fv(i).replace('fv','')}</div>`).join('');
+}
+function vWardrobe(){
+  const o=(a,v)=>a.map(x=>`<option${x===v?' selected':''}>${x}</option>`).join('');
+  return`<div class="row sp" style="margin-bottom:16px"><h1>Гардероб</h1><button class="b" data-a="add">${I('plus',16)}Добавить</button></div>
+  <input class="in" id="wq" placeholder="Поиск по названию, бренду, тегам" value="${E(W.q)}" style="margin-bottom:10px">
+  <div class="row" style="margin-bottom:16px"><select class="in" id="wc" style="flex:1"><option value="">Все категории</option>${o(CATS,W.cat)}</select>
+  <select class="in" id="ws" style="flex:1">${[['new','Сначала новые'],['name','По названию'],['price','По цене'],['wears','По носке']].map(x=>`<option value="${x[0]}"${W.sort===x[0]?' selected':''}>${x[1]}</option>`).join('')}</select>
+  <button class="b g sm" data-a="vw" aria-label="Вид">${I(W.view==='grid'?'list':'grid',18)}</button></div><div id="wl">${wlist()}</div>`;
+}
+
+function vOutfits(){
+  let h='';
+  if(OT==='saved')h=S.outfits.length?S.outfits.map(o=>`<div class="c"><div class="row sp"><b>${E(o.name)}</b><button class="ib${o.fav?' on':''}" data-a="favO" data-id="${o.id}">${I('heart',18)}</button></div>${strip(o.ids)}
+    <div class="row" style="margin-top:12px"><button class="b sm" data-a="wearO" data-id="${o.id}">Надеть</button><button class="b g sm" data-a="editO" data-id="${o.id}">Изменить</button><button class="b g sm" data-a="delO" data-id="${o.id}">${I('trash',14)}</button></div></div>`).join('')
+    :empty('layers','Сохранённых образов нет. Создайте образ в конструкторе или сохраните рекомендацию на экране «Сегодня».');
+  else h=S.history.length?S.history.map(x=>`<div class="c"><div class="row sp"><b>${new Date(x.date+'T12:00').toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'})}</b><button class="b g sm" data-a="undo" data-id="${x.id}">${I('undo',14)}Отменить</button></div><div style="margin-top:10px">${strip(x.ids)}</div></div>`).join('')
+    :empty('layers','История пуста. Нажмите «Надеть», чтобы записать образ.');
+  return`<div class="row sp" style="margin-bottom:16px"><h1>Образы</h1><button class="b" data-a="newO">${I('plus',16)}Создать</button></div>
+  <div class="row" style="margin-bottom:16px"><button class="b${OT==='saved'?'':' g'} sm" data-a="tab" data-id="saved">Сохранённые</button><button class="b${OT==='hist'?'':' g'} sm" data-a="tab" data-id="hist">История</button></div>${h}`;
+}
+
+function bars(o){const m=Math.max(1,...Object.values(o));const e=Object.entries(o).filter(x=>x[1]);return e.length?e.map(([k,v])=>`<div class="bar"><span>${k}</span><i style="width:${v/m*55}%"></i><span style="color:var(--t)">${v}</span></div>`).join(''):'<p class="sub">Нет данных</p>'}
+function vStats(){
+  const it=S.items;if(!it.length)return`<h1 style="margin-bottom:16px">Аналитика</h1>${empty('chart','Добавьте вещи, чтобы увидеть статистику.')}`;
+  const pr=it.filter(i=>i.price>0),val=pr.reduce((a,i)=>a+i.price,0);
+  const cc={},sc={};CATS.forEach(c=>cc[c]=it.filter(i=>i.cat===c).length);SEAS.forEach(s=>sc[s]=it.filter(i=>i.season===s).length);
+  const worn=[...it].sort((a,b)=>b.wears-a.wears).filter(i=>i.wears>0).slice(0,5),least=[...it].sort((a,b)=>a.wears-b.wears).slice(0,5);
+  const cpw=pr.filter(i=>i.wears>0).map(i=>({i,v:i.price/i.wears})).sort((a,b)=>a.v-b.v);
+  const li=(i,r)=>`<div class="li" style="cursor:default" ><div style="flex:1">${E(i.name)}</div><span class="sub">${r}</span></div>`;
+  return`<h1 style="margin-bottom:16px">Аналитика</h1><div class="kp"><div class="c"><b>${it.length}</b><span class="sub">Всего вещей</span></div><div class="c"><b>${pr.length?money(val):'—'}</b><span class="sub">Стоимость гардероба</span></div><div class="c"><b>${S.history.length}</b><span class="sub">Надето образов</span></div></div>
+  <div class="c"><h2>По категориям</h2>${bars(cc)}</div><div class="c"><h2>По сезонам</h2>${bars(sc)}</div>
+  <div class="c"><h2>Чаще всего носите</h2>${worn.length?worn.map(i=>li(i,i.wears+' раз')).join(''):'<p class="sub">Пока нет данных о носке.</p>'}</div>
+  <div class="c"><h2>Реже всего носите</h2>${least.map(i=>li(i,i.wears+' раз')).join('')}</div>
+  <div class="c"><h2>Стоимость одного использования</h2><p class="sub" style="margin-bottom:6px">Цена вещи, делённая на число использований. Вещи без цены или без носки не учитываются.</p>${cpw.length?cpw.map(x=>li(x.i,money(x.v))).join(''):'<p class="sub">Укажите цену у вещей и отмечайте образы кнопкой «Надеть».</p>'}</div>`;
+}
+
+function vSet(){
+  const o=(a,v)=>a.map(x=>`<option value="${x[0]}"${x[0]==v?' selected':''}>${x[1]}</option>`).join('');
+  return`<h1 style="margin-bottom:16px">Настройки</h1><div class="c"><label class="lb" style="margin-top:0">Ваше имя</label><input class="in" id="sn" value="${E(S.name)}">
+  <label class="lb">Тема</label><select class="in" id="st">${o([['system','Системная'],['light','Светлая'],['dark','Тёмная']],S.theme)}</select>
+  <label class="lb">Город для погоды</label><select class="in" id="sc">${o([['auto','Автоматически (по местоположению)'],...CITIES.map((c,i)=>[i,c[0]])],S.city)}</select></div>
+  <div class="c"><h2>Аккаунт</h2><p class="sub" style="margin-bottom:12px">${E(AU&&AU.email||"")}</p><button class="b g" data-a="out">Выйти</button></div>
+  <div class="c"><h2>Данные</h2><p class="sub" style="margin-bottom:12px">Данные хранятся в вашем аккаунте и доступны на всех устройствах. Резервная копия позволяет сохранить их файлом.</p><div class="row"><button class="b" data-a="bk">Резервная копия</button><button class="b g" data-a="reset">Удалить все данные</button></div></div>`;
+}
+
+const lpc=(t,d)=>`<div class="c"><h2>${t}</h2><p class="sub">${d}</p></div>`;
+function landing(){return`<div class="lp"><header class="row sp"><b style="letter-spacing:.04em">WARDROBE OS</b><button class="b g sm" data-a="lg" data-id="in">Войти</button></header>
+  <section class="h1"><div class="sub ey">ЦИФРОВОЙ ГАРДЕРОБ</div><h1 class="big">WARDROBE OS</h1><p class="sub ld">Вся одежда в одном месте. Образы под погоду, история носки и понятная аналитика.</p>
+  <div class="row" style="justify-content:center"><button class="b" data-a="lg" data-id="up" style="padding:14px 28px;font-size:16px">Создать аккаунт</button><button class="b g" data-a="lg" data-id="in" style="padding:14px 28px;font-size:16px">Войти</button></div></section>
+  <section class="g3">${lpc('Весь гардероб','Фото, категории, бренды и цены. Каждая вещь на своём месте и всегда под рукой.')}${lpc('Образы на сегодня','Подбор по погоде вашего города: что надеть, чтобы не замёрзнуть и не перегреться.')}${lpc('Аналитика','Что вы носите чаще всего, что лежит без дела и сколько стоит одно использование вещи.')}</section>
+  <section class="ab"><h2>Кто мы</h2><p class="sub">Мы делаем простые инструменты для повседневной жизни. WARDROBE OS нужен, чтобы утром не тратить время на выбор одежды, а вещи не копились без дела. Без лишнего: личный аккаунт, ваши данные, ваш гардероб на любом устройстве.</p></section>
+  <footer class="sub">© WARDROBE OS</footer></div>`}
+function render(){
+  const N=[['today','Сегодня','sun'],['wardrobe','Гардероб','shirt'],['outfits','Образы','layers'],['stats','Аналитика','chart'],['set','Настройки','set']];
+  if(!AR){$('#app').innerHTML='';return}
+  if(!AU){$('#app').innerHTML=landing();return}
+  if(!S.name){$('#app').innerHTML=`<main style="margin:0"><div class="wrap" style="max-width:420px;padding-top:12vh"><h1>WARDROBE OS</h1><p class="sub" style="margin:8px 0 24px">Ваш личный гардероб. Как вас зовут?</p><input class="in" id="nm" placeholder="Имя" autocomplete="given-name"><button class="b" data-a="start" style="margin-top:14px">Начать</button></div></main>`;return}
+  const v={today:vToday,wardrobe:vWardrobe,outfits:vOutfits,stats:vStats,set:vSet}[V]();
+  $('#app').innerHTML=`<nav><div class="br">WARDROBE OS</div>${N.map(n=>`<button class="${n[0]===V?'on ':''}${n[0]==='set'?'set':''}" data-a="go" data-id="${n[0]}">${I(n[2],22)}${n[1]}</button>`).join('')}</nav><main><div class="wrap">${v}</div></main>`;
+}
+
+/* ---------- Формы ---------- */
+const sel=(id,a,v)=>`<select class="in" id="${id}">${a.map(x=>`<option${x===v?' selected':''}>${E(x)}</option>`).join('')}</select>`;
+function openItem(id){
+  const i=id?gI(id):{name:'',cat:'Футболки',color:'Чёрный',season:'Всесезонный',brand:'',price:'',tags:[],notes:'',fav:false,laundry:false,photo:''};
+  PH=i.photo;
+  modal(`<h2>${id?'Редактировать вещь':'Новая вещь'}</h2><div id="pv">${PH?`<img class="ph" style="max-height:220px;width:auto;margin:auto" src="${PH}" alt="">`:''}</div>
+  <label class="lb">Фото</label><input type="file" accept="image/*" id="fi" class="in">
+  <label class="lb">Название</label><input class="in" id="fn" value="${E(i.name)}">
+  <div class="r2"><div><label class="lb">Категория</label>${sel('fc',CATS,i.cat)}</div><div><label class="lb">Цвет</label>${sel('fo',Object.keys(COLS),i.color)}</div></div>
+  <div class="r2"><div><label class="lb">Сезон</label>${sel('fs',SEAS,i.season)}</div><div><label class="lb">Цена, ₸</label><input class="in" id="fp" type="number" inputmode="decimal" value="${i.price||''}"></div></div>
+  <label class="lb">Бренд</label><input class="in" id="fb" value="${E(i.brand)}">
+  <label class="lb">Теги через запятую</label><input class="in" id="ft" value="${E(i.tags.join(', '))}">
+  <label class="lb">Заметки</label><textarea class="in" id="fz" rows="2">${E(i.notes)}</textarea>
+  <div class="row" style="margin:14px 0"><label><input type="checkbox" id="ff"${i.fav?' checked':''}> Избранное</label><label><input type="checkbox" id="fl"${i.laundry?' checked':''}> В стирке</label></div>
+  <div class="row"><button class="b" data-a="saveI" data-id="${id||''}">Сохранить</button><button class="b g" data-a="cl">Отмена</button>${id?`<button class="b g" data-a="delI" data-id="${id}">${I('trash',16)}Удалить</button>`:''}</div>`);
+}
+function saveItem(id){
+  const name=$('#fn').value.trim();if(!name)return toast('Введите название вещи');
+  const p=parseFloat($('#fp').value);
+  const d={name,cat:$('#fc').value,color:$('#fo').value,season:$('#fs').value,price:p>0?p:null,brand:$('#fb').value.trim(),tags:$('#ft').value.split(',').map(x=>x.trim()).filter(Boolean),notes:$('#fz').value.trim(),fav:$('#ff').checked,laundry:$('#fl').checked,photo:PH};
+  if(id)Object.assign(gI(id),d);else S.items.push({id:uid(),wears:0,created:Date.now(),...d});
+  G=null;save();closeM();render();toast('Вещь сохранена');
+}
+function openOutfit(id){
+  const o=id?S.outfits.find(x=>x.id===id):{name:'',ids:[]};
+  const cur=s=>(o.ids.map(gI).find(i=>i&&slotOf(i.cat)===s)||{}).id;
+  modal(`<h2>${id?'Изменить образ':'Новый образ'}</h2><label class="lb">Название</label><input class="in" id="on" value="${E(o.name)}" placeholder="Например, рабочий день">
+  ${SLOTS.map(s=>`<label class="lb">${SN[s]}</label><select class="in" id="sl-${s}"><option value="">Не выбрано</option>${S.items.filter(i=>slotOf(i.cat)===s).map(i=>`<option value="${i.id}"${i.id===cur(s)?' selected':''}>${E(i.name)}${i.laundry?' (в стирке)':''}</option>`).join('')}</select>`).join('')}
+  <div class="row" style="margin-top:18px"><button class="b" data-a="saveO" data-id="${id||''}">Сохранить</button><button class="b g" data-a="cl">Отмена</button></div>`);
+}
+function saveOutfit(id){
+  const ids=SLOTS.map(s=>$('#sl-'+s).value).filter(Boolean);
+  const miss=['top','bottom','shoes'].filter(s=>!$('#sl-'+s).value);
+  if(miss.length)return toast('Добавьте в образ: '+miss.map(s=>SN[s].toLowerCase()).join(', '));
+  const name=$('#on').value.trim()||'Образ от '+new Date().toLocaleDateString('ru-RU');
+  if(id){Object.assign(S.outfits.find(x=>x.id===id),{name,ids})}else S.outfits.unshift({id:uid(),name,ids,fav:false});
+  save();closeM();render();toast('Образ сохранён');
+}
+function backup(){
+  modal(`<h2>Резервная копия</h2><p class="sub">Скопируйте текст, чтобы сохранить данные, или вставьте ранее сохранённую копию и нажмите «Восстановить».</p><textarea class="in" id="bk" rows="8" style="margin:12px 0;font-size:12px">${E(JSON.stringify(S))}</textarea>
+  <input type="file" accept=".json,.txt" id="bf" class="in" style="margin-bottom:12px"><div class="row"><button class="b" data-a="copy">Копировать</button><button class="b g" data-a="restore">Восстановить</button><button class="b g" data-a="cl">Закрыть</button></div>`);
+}
+
+/* ---------- События ---------- */
+document.addEventListener('click',e=>{
+  if(e.target.classList.contains('ov'))return closeM();
+  const a=e.target.closest('[data-a]');if(!a)return;e.stopPropagation();
+  const id=a.dataset.id,k=a.dataset.a;
+  const d=wd(),c=G&&G.list&&G.list.length?G.list[G.idx%G.list.length]:null;
+  const A={
+    lg(){authModal(id)},swm(){authModal(AM==='up'?'in':'up')},sub:submit,gg:google,fg:forgot,out(){sync().then(()=>auth.signOut())},
+    start(){const v=$('#nm').value.trim();if(!v)return toast('Введите имя');S.name=v;save();render();loadW()},
+    go(){V=id;render();window.scrollTo(0,0)},
+    cl:closeM,yes(){closeM();CB&&CB();CB=null},
+    refresh(){loadW()},
+    man(){const v=parseFloat($('#mt').value);if(isNaN(v))return toast('Введите число, например 12');MAN=v;G=null;render()},
+    next(){G.idx++;render()},
+    wearG(){c&&wear(c.items.map(i=>i.id))},
+    saveG(){if(!c)return;S.outfits.unshift({id:uid(),name:'Образ от '+new Date().toLocaleDateString('ru-RU'),ids:c.items.map(i=>i.id),fav:false});save();toast('Образ сохранён')},
+    add(){openItem()},edit(){openItem(id)},
+    fav(){const i=gI(id);i.fav=!i.fav;G=null;save();$('#wl')?$('#wl').innerHTML=wlist():render()},
+    vw(){W.view=W.view==='grid'?'list':'grid';render()},
+    saveI(){saveItem(id)},
+    delI(){ask('Удалить вещь? Она также исчезнет из сохранённых образов.',()=>{S.items=S.items.filter(x=>x.id!==id);S.outfits.forEach(o=>o.ids=o.ids.filter(x=>x!==id));G=null;save();render();toast('Вещь удалена')})},
+    tab(){OT=id;render()},newO(){openOutfit()},editO(){openOutfit(id)},saveO(){saveOutfit(id)},
+    favO(){const o=S.outfits.find(x=>x.id===id);o.fav=!o.fav;save();render()},
+    wearO(){const o=S.outfits.find(x=>x.id===id);if(o.ids.some(x=>gI(x)&&gI(x).laundry))return toast('В образе есть вещь в стирке');wear(o.ids)},
+    delO(){ask('Удалить образ?',()=>{S.outfits=S.outfits.filter(x=>x.id!==id);save();render()})},
+    undo(){undo(id)},bk:backup,
+    copy(){const t=$('#bk');t.select();(navigator.clipboard?navigator.clipboard.writeText(t.value):Promise.reject()).then(()=>toast('Скопировано')).catch(()=>{document.execCommand&&document.execCommand('copy');toast('Скопировано')})},
+    restore(){try{const j=JSON.parse($('#bk').value);if(!Array.isArray(j.items))throw 0;ask('Текущие данные будут заменены. Продолжить?',()=>{S=migrate(j);G=null;save();applyTheme();render();toast('Данные восстановлены')})}catch(x){toast('Неверный формат резервной копии')}},
+    reset(){ask('Удалить все вещи, образы и историю? Это действие нельзя отменить.',()=>{S={v:3,name:S.name,theme:S.theme,city:S.city,items:[],outfits:[],history:[]};G=null;save();render();toast('Данные удалены')})}
+  };
+  A[k]&&A[k]();
+});
+document.addEventListener('input',e=>{
+  if(e.target.id==='wq'){W.q=e.target.value;$('#wl').innerHTML=wlist()}
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.id==='wc'){W.cat=t.value;$('#wl').innerHTML=wlist()}
+  else if(t.id==='ws'){W.sort=t.value;$('#wl').innerHTML=wlist()}
+  else if(t.id==='sn'){S.name=t.value.trim()||S.name;save();toast('Имя сохранено')}
+  else if(t.id==='st'){S.theme=t.value;applyTheme();save()}
+  else if(t.id==='sc'){S.city=t.value==='auto'?'auto':+t.value;MAN=null;save();loadW()}
+  else if(t.id==='fi'&&t.files[0]){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,720/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);PH=c.toDataURL('image/jpeg',.78);$('#pv').innerHTML=`<img class="ph" style="max-height:220px;width:auto;margin:auto" src="${PH}" alt="">`};im.onerror=()=>toast('Не удалось открыть изображение');im.src=r.result};r.readAsDataURL(t.files[0])}
+  else if(t.id==='bf'&&t.files[0]){const r=new FileReader();r.onload=()=>{$('#bk').value=r.result};r.readAsText(t.files[0])}
+});
+setInterval(()=>{if(V==='today'&&S.name&&!$('#mo').innerHTML&&!document.activeElement.matches('input,textarea'))render()},60000);
+
+/* ---------- Автообновление погоды ---------- */
+const busy=()=>document.activeElement&&document.activeElement.matches('input,textarea,select');
+setInterval(()=>{if(S.name&&MAN==null&&!busy())loadW()},18e5);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.name&&MAN==null&&!busy()&&(!WX||Date.now()-WX.at>12e5))loadW()});
+/* ---------- Запуск ---------- */
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='ap')submit()});
+auth.onAuthStateChanged(async u=>{
+  AU=u;OK=false;S=blank();SV={};G=null;WX=null;V='today';
+  if(u){try{await loadUser()}catch(e){toast('Не удалось загрузить данные. Проверьте правила Firestore и сеть');OK=false}}
+  AR=true;closeM();applyTheme();render();if(u&&S.name)loadW();
+});
+</script>
+</body>
+</html>
