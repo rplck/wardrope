@@ -24,11 +24,12 @@ nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
 nav button.on{color:var(--t)}
 main{padding:24px 20px calc(100px + env(safe-area-inset-bottom,0px))}
 .wrap{max-width:960px;margin:auto}
-@media(min-width:800px){nav{top:0;bottom:auto;width:220px;flex-direction:column;border-top:0;border-right:1px solid var(--ln);padding:calc(24px + env(safe-area-inset-top,0px)) 12px 24px}
-nav .br{display:block;font-weight:700;letter-spacing:.04em;padding:0 12px 20px}
-nav button{flex:none;flex-direction:row;gap:10px;font-size:15px;padding:10px 12px;border-radius:12px;text-align:left}
-nav button.on{background:var(--bg)}nav .set{margin-top:auto}
-main{margin-left:220px;padding:36px 32px 60px}}
+@media(min-width:800px){nav{top:0;bottom:auto;height:64px;flex-direction:row;align-items:center;gap:4px;border-top:0;border-bottom:1px solid var(--ln);padding:0 max(24px,calc((100vw - 1120px)/2));padding-top:env(safe-area-inset-top,0px)}
+nav .br{display:block;font-weight:700;letter-spacing:.06em;padding:0 28px 0 0}
+nav button{flex:none;flex-direction:row;gap:8px;font-size:14px;font-weight:550;padding:9px 16px;border-radius:980px;white-space:nowrap;transition:background .15s,color .15s}
+nav button:hover{background:var(--bg);color:var(--t)}
+nav button.on{background:var(--btn);color:var(--bt)}nav .set{margin-left:auto}
+main{margin-left:0;padding:calc(64px + 36px + env(safe-area-inset-top,0px)) 32px 80px}.wrap{max-width:1120px}}
 .c{background:var(--s);border-radius:22px;padding:20px;box-shadow:0 1px 2px rgba(0,0,0,.05);margin-bottom:16px}
 .b{background:var(--btn);color:var(--bt);border:0;border-radius:980px;padding:10px 18px;font:inherit;font-weight:550;cursor:pointer;display:inline-flex;gap:7px;align-items:center;transition:transform .15s,opacity .15s}
 .b:active{transform:scale(.96)}.b.g{background:transparent;color:var(--t);border:1px solid var(--ln)}.b.sm{padding:6px 12px;font-size:13px}
@@ -63,6 +64,7 @@ main{margin-left:220px;padding:36px 32px 60px}}
 .lp .g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}.lp .g3 .c{margin:0}
 .lp .ab{text-align:center;max-width:560px;margin:64px auto 40px}.lp footer{text-align:center;font-size:13px}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+a.b{text-decoration:none}.sz{font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:1}
 </style>
 </head>
 <body>
@@ -268,6 +270,99 @@ const strip=ids=>`<div class="st">${ids.map(gI).filter(Boolean).map(i=>`<div cla
 const empty=(ic,t,b)=>`<div class="em">${I(ic,36)}<p>${t}</p>${b||''}</div>`;
 function greet(){const h=new Date().getHours();return(h>=5&&h<12?'Доброе утро':h>=12&&h<18?'Добрый день':'Добрый вечер')+', '+E(S.name)+'!'}
 
+/* ---------- Параметры, покупки, стирка ---------- */
+const SZL=['XS','S','M','L','XL','XXL'];
+const EN={'Верхняя одежда':'jacket','Футболки':'t-shirt','Лонгсливы':'long sleeve','Свитера':'sweater','Худи':'hoodie','Брюки':'trousers','Джинсы':'jeans','Обувь':'sneakers','Аксессуары':'cap'};
+const CEN={'Чёрный':'black','Белый':'white','Серый':'grey','Бежевый':'beige','Синий':'navy','Коричневый':'brown'};
+const SHOPS=[['Grailed',q=>'https://www.grailed.com/shop?query='+encodeURIComponent(q)],['Farfetch',q=>'https://www.farfetch.com/shopping/men/search/items.aspx?q='+encodeURIComponent(q)],['ASOS',q=>'https://www.asos.com/search/?q='+encodeURIComponent(q)]];
+const shopBtns=(a)=>SHOPS.map((x,k)=>`<button class="b g sm" data-a="${a}" data-id="${k}">${x[0]}</button>`).join('');
+const SEARCH_API='https://twilight-sound-194c.myrehabclub.workers.dev/'; // сюда вставьте адрес вашего Cloudflare Worker, например 'https://wardrobe-search.ИМЯ.workers.dev/'
+let RS={q:'',cat:'',list:[],st:'',note:''},FS={q:'',list:[],st:'',note:''};
+function szQ(cat){const z=sizes(S.params||{}),v=cat==='Обувь'?z.shoe&&'EU '+z.shoe:['Брюки','Джинсы'].includes(cat)?z.bot:cat==='Аксессуары'?'':z.top;return v?'&size='+encodeURIComponent(v):''}
+const card=(r,act,lbl)=>`<div class="it" data-a="${act}" data-id="${E(String(r.id))}"><img class="ph" src="${E(r.img)}" alt="${E(r.title)}" loading="lazy" referrerpolicy="no-referrer" style="aspect-ratio:1/1;object-fit:cover;width:100%"><div style="font-size:13px;font-weight:600;margin-top:6px">${E(r.title)}</div><div class="sub" style="font-size:12px">${E(r.brand)}${r.size?' · '+E(r.size):''} · $${Math.round(r.price)}</div><div class="b sm" style="margin-top:6px">${lbl}</div></div>`;
+function fresHTML(){
+  if(FS.st==='load')return msg('Ищем…');if(FS.st==='err')return msg('Не удалось загрузить. Попробуйте другой запрос.');if(FS.st==='empty')return msg('Ничего не найдено в вашем размере.');
+  if(!FS.list.length)return'';
+  return(FS.note?`<p class="sub" style="font-size:12px;margin-top:10px">${FS.note}. Нажмите на вещь, чтобы выбрать.</p>`:'')+`<div class="gr" style="margin-top:10px;grid-template-columns:repeat(auto-fill,minmax(110px,1fr))">${FS.list.map(r=>card(r,'pick','Выбрать')).join('')}</div>`;
+}
+async function fSearch(q){
+  q=(q||'').trim();if(!q)return toast('Введите, что искать');
+  FS={q,list:[],st:'load',note:''};const e=$('#fres');if(e)e.innerHTML=fresHTML();
+  try{const c=guessCat(q,'');const j=await jget(SEARCH_API+(SEARCH_API.includes('?')?'&':'?')+'q='+encodeURIComponent(q)+szQ(c),15000);const fl=fitList(j.items||[],c);FS.list=fl.list;FS.note=fl.note;FS.st=FS.list.length?'ok':'empty'}catch(x){FS.st='err'}
+  const e2=$('#fres');if(e2)e2.innerHTML=fresHTML();
+}
+const upd=()=>{const e=$('#sres');if(e)e.innerHTML=sresHTML()};
+const msg=t=>`<p class="sub" style="margin-top:12px">${t}</p>`;
+function sresHTML(){
+  if(RS.st==='load')return msg('Ищем…');
+  if(RS.st==='noapi')return msg('Поиск пока не подключён: вставьте адрес вашего Worker в константу SEARCH_API в начале скрипта.');
+  if(RS.st==='err')return msg('Не удалось загрузить результаты. Попробуйте другой запрос или позже.');
+  if(RS.st==='empty')return msg('Ничего не найдено.');
+  if(!RS.list.length)return'';
+  return(RS.note?`<p class="sub" style="font-size:12px;margin-top:10px">${RS.note}</p>`:'')+`<div class="gr" style="margin-top:14px;grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">${RS.list.map(r=>`<div><img class="ph" src="${E(r.img)}" alt="${E(r.title)}" loading="lazy" referrerpolicy="no-referrer"><div style="font-size:13px;font-weight:600;margin-top:6px">${E(r.title)}</div><div class="sub" style="font-size:12px">${E(r.brand)}${r.size?' · '+E(r.size):''} · $${Math.round(r.price)}</div><div class="row" style="margin-top:6px;gap:6px"><button class="b sm" data-a="addR" data-id="${E(String(r.id))}">${I('plus',14)}В гардероб</button><a class="b g sm" target="_blank" rel="noopener" href="${E(r.url)}">Grailed</a></div></div>`).join('')}</div>`;
+}
+async function runSearch(q,cat){
+  q=(q||'').trim();if(!q)return toast('Введите, что искать');
+  RS={q,cat:cat||'',list:[],st:SEARCH_API?'load':'noapi'};upd();if(!SEARCH_API)return;
+  try{const j=await jget(SEARCH_API+(SEARCH_API.includes('?')?'&':'?')+'q='+encodeURIComponent(q)+szQ(RS.cat||guessCat(q,'')),15000);const fl=fitList(j.items||[],RS.cat||guessCat(q,''));RS.list=fl.list;RS.note=fl.note;RS.st=RS.list.length?'ok':'empty'}catch(e){RS.st='err'}
+  upd();
+}
+function guessCat(t,fb){
+  const m=[[/jean|denim pant/,'Джинсы'],[/hood|zip up/,'Худи'],[/sweater|knit|cardigan|crewneck/,'Свитера'],[/long ?sleeve/,'Лонгсливы'],[/t-?shirt|\btee\b/,'Футболки'],[/pant|trouser|cargo|chino|short/,'Брюки'],[/jacket|coat|bomber|parka|puffer|vest/,'Верхняя одежда'],[/sneaker|boot|shoe|loafer|dunk|jordan|runner/,'Обувь'],[/\bcap\b|hat|bag|belt|scarf|beanie|wallet/,'Аксессуары']].find(x=>x[0].test(t));
+  return m?m[1]:fb||'Футболки';
+}
+function shopGo(k,inp){const q=($('#'+inp).value||'').trim();if(!q)return toast('Введите, что искать');window.open(SHOPS[k][1](q),'_blank','noopener')}
+function sizes(p){
+  const n=k=>parseFloat(p[k])||0,h=n('h'),w=n('w');let f=n('f');
+  if(f&&f<33)f=Math.round((f+1.5)*1.5*2)/2; // старые данные были в см
+  let top=null;
+  if(h&&w){const e=w-(h-175)*.7;top=e<50?0:e<60?1:e<70?2:e<80?3:e<90?4:5;if(h>=190&&top<5)top++}
+  return{top:top==null?null:SZL[top],bot:top==null?null:SZL[top],over:top==null?null:SZL[Math.min(5,top+1)],shoe:f||null,src:'по росту и весу'};
+}
+const WAIST={XS:[27,29],S:[29,31],M:[31,33],L:[33,35],XL:[35,38],XXL:[38,42]};
+function sizeOk(r,cat,z){
+  const raw=String(r.size||'').toUpperCase().trim();if(!raw)return null;
+  const num=parseFloat(raw.replace(/[^\d.]/g,''));
+  if(cat==='Обувь'){if(!z.shoe||!num)return null;const us=z.shoe-33;return Math.abs(num-us)<=.5||(/EU/.test(raw)&&Math.abs(num-z.shoe)<=.5)}
+  if(cat==='Аксессуары')return null;
+  const L=raw.replace('SMALL','S').replace('MEDIUM','M').replace('LARGE','L');
+  if(['Брюки','Джинсы'].includes(cat)&&num>=24&&z.bot){const w=WAIST[z.bot];return num>=w[0]&&num<=w[1]}
+  return z.top?L.split(/[\s\/,]+/).includes(z.top):null;
+}
+function fitList(list,cat){
+  const z=sizes(S.params||{});cat=cat||'';
+  const has=list.some(r=>r.size);if(!has||(!z.top&&!z.shoe))return{list,note:''};
+  const out=list.filter(r=>sizeOk(r,guessCat((r.title||'')+' '+cat,cat),z)!==false);
+  return{list:out,note:'Показаны только вещи вашего размера ('+[z.top,z.shoe&&'EU '+z.shoe].filter(Boolean).join(', ')+')'};
+}
+function psHTML(){
+  const z=sizes(S.params||{});
+  if(!z.top&&!z.shoe)return'<p class="sub">Введите рост, вес и размер обуви, и мы подскажем размер.</p>';
+  const b=(v,l)=>v?`<div><div class="sz">${v}</div><div class="l">${l}</div></div>`:'';
+  return`<div class="hero">${b(z.top,'Верх')}${b(z.bot,'Низ')}${b(z.shoe,'Обувь, EU')}</div><p class="sub" style="font-size:12px;margin-top:12px">${z.top?'Расчёт '+z.src+'. ':''}${z.over?'Для оверсайза берите '+z.over+'. ':''}Это ориентир, сверяйтесь с таблицей размеров бренда.</p>`;
+}
+function vParams(){
+  const p=S.params||{},f=(k,l)=>`<div><label class="lb" style="margin-top:0">${l}</label><input class="in" id="p-${k}" type="number" inputmode="decimal" value="${E(p[k])}"></div>`;
+  return`<div class="c"><h2>Мои параметры</h2><div class="r2">${f('h','Рост, см')}${f('w','Вес, кг')}</div><div class="r2" style="margin:10px 0 16px">${f('f','Размер обуви (EU)')}<div></div></div><div id="psz">${psHTML()}</div></div>`;
+}
+function shopBody(){
+  const d=wd(),t=d?effT(d):15,z=sizes(S.params||{});
+  const ok=CATS.filter(c=>t>=CR[c][0]-2&&t<=CR[c][1]+2).map(c=>({c,n:S.items.filter(i=>i.cat===c).length})).sort((a,b)=>a.n-b.n).slice(0,4);
+  return ok.map(({c,n})=>{
+    const have=S.items.filter(i=>i.cat===c).map(i=>i.color),col=NEUT.find(x=>!have.includes(x))||'Чёрный';
+    const sz=c==='Обувь'?(z.shoe?'EU '+z.shoe:''):c==='Аксессуары'?'':(['Брюки','Джинсы'].includes(c)?z.bot:z.top)||'';
+    const q=CEN[col]+' '+EN[c];
+    return`<div class="li" style="cursor:default;flex-direction:column;align-items:flex-start;gap:8px"><div><b>${c} · ${col.toLowerCase()}</b>${sz?` <span class="tag">${sz}</span>`:''}<div class="sub" style="font-size:12.5px">${n?'В гардеробе только '+n+' шт.':'В гардеробе пока нет'}, подходит для ${t}°C</div></div><div class="row"><button class="b sm" data-a="sgo" data-id="${E(q)}" data-c="${c}">Смотреть тут</button>${SHOPS.map(x=>`<a class="b g sm" target="_blank" rel="noopener" href="${x[1](q)}">${x[0]}</a>`).join('')}</div></div>`;
+  }).join('');
+}
+function vShop(){
+  return`<div class="c"><h2>Что можно купить</h2><p class="sub" style="margin-bottom:6px">Подборка по пробелам в гардеробе, погоде и вашему размеру. «Смотреть тут» показывает вещи с Grailed прямо здесь.</p><div id="shp">${shopBody()}</div><label class="lb">Поиск на Grailed</label><div class="row" style="flex-wrap:nowrap"><input class="in" id="sq" placeholder="Например: carhartt detroit jacket" value="${E(RS.q)}"><button class="b" data-a="srch">Найти</button></div><div id="sres">${sresHTML()}</div></div>`;
+}
+function vLaundry(){
+  const a=S.items.filter(i=>i.laundry);
+  return`<div class="c"><div class="row sp"><h2 style="margin:0">Одежда в стирке</h2><button class="b sm" data-a="lnAdd">${I('plus',14)}Добавить</button></div>${a.length?`<div class="gr" style="margin-top:14px;grid-template-columns:repeat(auto-fill,minmax(110px,1fr))">${a.map(i=>`<div>${thumb(i)}<div style="font-size:13px;font-weight:600;margin:6px 0">${E(i.name)}</div><button class="b g sm" data-a="lnBack" data-id="${i.id}">${I('check',14)}Постирано</button></div>`).join('')}</div><button class="b g sm" data-a="lnAll" style="margin-top:14px">Всё постирано</button>`:'<p class="sub" style="margin-top:8px">Сейчас ничего не в стирке. Вещи в стирке не попадают в подбор образов.</p>'}</div>`;
+}
+
 function vToday(){
   const date=new Date().toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
   const d=wd();let wc='',oc='';
@@ -294,7 +389,7 @@ function vToday(){
         <div class="row" style="margin-top:14px"><button class="b" data-a="wearG">${I('check',16)}Надеть</button><button class="b g" data-a="saveG">Сохранить</button><button class="b g" data-a="next">Другой образ</button></div></div>`;}
     }
   }
-  return`<h1>${greet()}</h1><p class="sub" style="margin:6px 0 22px;text-transform:capitalize">${date}</p>${oc}${wc}`;
+  return`<h1>${greet()}</h1><p class="sub" style="margin:6px 0 22px;text-transform:capitalize">${date}</p>${oc}${wc}${vParams()}${vShop()}${vLaundry()}`;
 }
 
 function wlist(){
@@ -370,15 +465,18 @@ function render(){
 /* ---------- Формы ---------- */
 const sel=(id,a,v)=>`<select class="in" id="${id}">${a.map(x=>`<option${x===v?' selected':''}>${E(x)}</option>`).join('')}</select>`;
 function openItem(id){
-  const i=id?gI(id):{name:'',cat:'Футболки',color:'Чёрный',season:'Всесезонный',brand:'',price:'',tags:[],notes:'',fav:false,laundry:false,photo:''};
-  PH=i.photo;
+  const i=id?gI(id):{name:'',cat:'Футболки',color:'Чёрный',season:'Всесезонный',brand:'',price:'',tags:[],notes:'',fav:false,laundry:false,photo:'',url:''};
+  PH=i.photo;if(!id)FS={q:'',list:[],st:'',note:''};
   modal(`<h2>${id?'Редактировать вещь':'Новая вещь'}</h2><div id="pv">${PH?`<img class="ph" style="max-height:220px;width:auto;margin:auto" src="${PH}" alt="">`:''}</div>
+  ${id?'':`<label class="lb">Найти вещь на Grailed</label><div class="row" style="flex-wrap:nowrap"><input class="in" id="fq" placeholder="Например: stone island hoodie"><button class="b" data-a="fsrch">Найти</button></div><div id="fres">${fresHTML()}</div><p class="sub" style="font-size:12px;margin-top:10px">Или заполните вручную ниже.</p>`}
   <label class="lb">Фото</label><input type="file" accept="image/*" id="fi" class="in">
   <label class="lb">Название</label><input class="in" id="fn" value="${E(i.name)}">
   <div class="r2"><div><label class="lb">Категория</label>${sel('fc',CATS,i.cat)}</div><div><label class="lb">Цвет</label>${sel('fo',Object.keys(COLS),i.color)}</div></div>
   <div class="r2"><div><label class="lb">Сезон</label>${sel('fs',SEAS,i.season)}</div><div><label class="lb">Цена, ₸</label><input class="in" id="fp" type="number" inputmode="decimal" value="${i.price||''}"></div></div>
   <label class="lb">Бренд</label><input class="in" id="fb" value="${E(i.brand)}">
   <label class="lb">Теги через запятую</label><input class="in" id="ft" value="${E(i.tags.join(', '))}">
+  <label class="lb">Ссылка на товар</label><input class="in" id="fu" type="url" placeholder="https://www.grailed.com/listings/..." value="${E(i.url||'')}">${/^https?:/.test(i.url||'')?`<a class="sub" style="font-size:13px" target="_blank" rel="noopener" href="${E(i.url)}">Открыть в магазине</a>`:''}
+  <label class="lb">Ссылка на фото (необязательно)</label><input class="in" id="fph" type="url" placeholder="https://..." value="${/^https?:/.test(i.photo||'')?E(i.photo):''}">
   <label class="lb">Заметки</label><textarea class="in" id="fz" rows="2">${E(i.notes)}</textarea>
   <div class="row" style="margin:14px 0"><label><input type="checkbox" id="ff"${i.fav?' checked':''}> Избранное</label><label><input type="checkbox" id="fl"${i.laundry?' checked':''}> В стирке</label></div>
   <div class="row"><button class="b" data-a="saveI" data-id="${id||''}">Сохранить</button><button class="b g" data-a="cl">Отмена</button>${id?`<button class="b g" data-a="delI" data-id="${id}">${I('trash',16)}Удалить</button>`:''}</div>`);
@@ -386,7 +484,7 @@ function openItem(id){
 function saveItem(id){
   const name=$('#fn').value.trim();if(!name)return toast('Введите название вещи');
   const p=parseFloat($('#fp').value);
-  const d={name,cat:$('#fc').value,color:$('#fo').value,season:$('#fs').value,price:p>0?p:null,brand:$('#fb').value.trim(),tags:$('#ft').value.split(',').map(x=>x.trim()).filter(Boolean),notes:$('#fz').value.trim(),fav:$('#ff').checked,laundry:$('#fl').checked,photo:PH};
+  const d={name,cat:$('#fc').value,color:$('#fo').value,season:$('#fs').value,price:p>0?p:null,brand:$('#fb').value.trim(),tags:$('#ft').value.split(',').map(x=>x.trim()).filter(Boolean),notes:$('#fz').value.trim(),fav:$('#ff').checked,laundry:$('#fl').checked,photo:PH,url:(u=>u&&!/^https?:\/\//i.test(u)?'https://'+u:u)($('#fu').value.trim())};
   if(id)Object.assign(gI(id),d);else S.items.push({id:uid(),wears:0,created:Date.now(),...d});
   G=null;save();closeM();render();toast('Вещь сохранена');
 }
@@ -422,6 +520,20 @@ document.addEventListener('click',e=>{
     go(){V=id;render();window.scrollTo(0,0)},
     cl:closeM,yes(){closeM();CB&&CB();CB=null},
     refresh(){loadW()},
+    srch(){runSearch($('#sq').value)},
+    sgo(){$('#sq').value=id;runSearch(id,a.dataset.c);$('#sq').scrollIntoView({block:'center',behavior:'smooth'})},
+    addR(){const r=RS.list.find(x=>String(x.id)===id);if(!r)return;const t=r.title.toLowerCase(),col=Object.keys(CEN).find(k=>t.includes(CEN[k]))||'Другой';
+      S.items.push({id:uid(),wears:0,created:Date.now(),name:r.title,cat:guessCat(t+' '+RS.q,RS.cat),color:col,season:'Всесезонный',price:null,brand:r.brand||'',tags:[],notes:'Grailed, $'+Math.round(r.price)+(r.size?', размер '+r.size:''),fav:false,laundry:false,photo:r.img,url:r.url});
+      G=null;save();toast('Добавлено в гардероб. Категорию и цену можно поправить в «Гардеробе»')},
+    sq(){shopGo(+id,'sq')},fq(){shopGo(+id,'fq')},
+    fsrch(){fSearch($('#fq').value)},
+    pick(){const r=FS.list.find(x=>String(x.id)===id);if(!r)return;const t=r.title.toLowerCase(),col=Object.keys(CEN).find(k=>t.includes(CEN[k]))||'Другой';
+      $('#fn').value=r.title;$('#fc').value=guessCat(t+' '+FS.q,'Футболки');if([...$('#fo').options].some(o=>o.value===col))$('#fo').value=col;$('#fb').value=r.brand||'';$('#fu').value=r.url||'';$('#fph').value=r.img||'';$('#fz').value='Grailed, $'+Math.round(r.price)+(r.size?', размер '+r.size:'');
+      PH=r.img||'';$('#pv').innerHTML=PH?`<img class="ph" style="max-height:220px;width:auto;margin:auto" src="${E(PH)}" alt="" referrerpolicy="no-referrer">`:'';document.querySelector('.md').scrollTo({top:0,behavior:'smooth'});toast('Вещь выбрана. Проверьте данные и нажмите «Сохранить»')},
+    lnAdd(){const a=S.items.filter(i=>!i.laundry);if(!a.length)return toast('Нет вещей, которые можно добавить');modal(`<h2>Что в стирку?</h2><div style="margin:8px 0 16px">${a.map(i=>`<label class="li" style="cursor:pointer"><input type="checkbox" class="ln" value="${i.id}">${thumb(i)}<span style="flex:1">${E(i.name)}</span></label>`).join('')}</div><div class="row"><button class="b" data-a="lnSave">Добавить</button><button class="b g" data-a="cl">Отмена</button></div>`)},
+    lnSave(){const ids=[...document.querySelectorAll('.ln:checked')].map(x=>x.value);if(!ids.length)return toast('Выберите вещи');ids.forEach(x=>{gI(x).laundry=true});G=null;save();closeM();render();toast('Добавлено в стирку: '+ids.length)},
+    lnBack(){const i=gI(id);i.laundry=false;G=null;save();render();toast('Вещь снова доступна',()=>{i.laundry=true;G=null;save();render()})},
+    lnAll(){S.items.forEach(i=>i.laundry=false);G=null;save();render();toast('Всё постирано')},
     man(){const v=parseFloat($('#mt').value);if(isNaN(v))return toast('Введите число, например 12');MAN=v;G=null;render()},
     next(){G.idx++;render()},
     wearG(){c&&wear(c.items.map(i=>i.id))},
@@ -444,6 +556,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('input',e=>{
   if(e.target.id==='wq'){W.q=e.target.value;$('#wl').innerHTML=wlist()}
+  else if((e.target.id||'').startsWith('p-')){const p=S.params||(S.params={});p[e.target.id.slice(2)]=e.target.value;$('#psz').innerHTML=psHTML();$('#shp').innerHTML=shopBody();save()}
 });
 document.addEventListener('change',e=>{
   const t=e.target;
@@ -453,6 +566,7 @@ document.addEventListener('change',e=>{
   else if(t.id==='st'){S.theme=t.value;applyTheme();save()}
   else if(t.id==='sc'){S.city=t.value==='auto'?'auto':+t.value;MAN=null;save();loadW()}
   else if(t.id==='fi'&&t.files[0]){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,720/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);PH=c.toDataURL('image/jpeg',.78);$('#pv').innerHTML=`<img class="ph" style="max-height:220px;width:auto;margin:auto" src="${PH}" alt="">`};im.onerror=()=>toast('Не удалось открыть изображение');im.src=r.result};r.readAsDataURL(t.files[0])}
+  else if(t.id==='fph'){const u=t.value.trim();PH=/^https?:\/\//.test(u)?u:'';$('#pv').innerHTML=PH?`<img class="ph" style="max-height:220px;width:auto;margin:auto" src="${E(PH)}" alt="" onerror="this.remove()">`:''}
   else if(t.id==='bf'&&t.files[0]){const r=new FileReader();r.onload=()=>{$('#bk').value=r.result};r.readAsText(t.files[0])}
 });
 setInterval(()=>{if(V==='today'&&S.name&&!$('#mo').innerHTML&&!document.activeElement.matches('input,textarea'))render()},60000);
@@ -462,7 +576,7 @@ const busy=()=>document.activeElement&&document.activeElement.matches('input,tex
 setInterval(()=>{if(S.name&&MAN==null&&!busy())loadW()},18e5);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.name&&MAN==null&&!busy()&&(!WX||Date.now()-WX.at>12e5))loadW()});
 /* ---------- Запуск ---------- */
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='ap')submit()});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='ap')submit();if(e.key==='Enter'&&e.target.id==='sq')runSearch(e.target.value);if(e.key==='Enter'&&e.target.id==='fq')fSearch(e.target.value)});
 auth.onAuthStateChanged(async u=>{
   AU=u;OK=false;S=blank();SV={};G=null;WX=null;V='today';
   if(u){try{await loadUser()}catch(e){toast('Не удалось загрузить данные. Проверьте правила Firestore и сеть');OK=false}}
