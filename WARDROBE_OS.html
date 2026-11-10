@@ -310,13 +310,13 @@ const CEN={'Чёрный':'black','Белый':'white','Серый':'grey','Бе
 const SHOPS=[['Grailed',q=>'https://www.grailed.com/shop?query='+encodeURIComponent(q)],['Farfetch',q=>'https://www.farfetch.com/shopping/men/search/items.aspx?q='+encodeURIComponent(q)],['ASOS',q=>'https://www.asos.com/search/?q='+encodeURIComponent(q)]];
 const shopBtns=(a)=>SHOPS.map((x,k)=>`<button class="b g sm" data-a="${a}" data-id="${k}">${x[0]}</button>`).join('');
 const SEARCH_API='https://twilight-sound-194c.myrehabclub.workers.dev/'; // сюда вставьте адрес вашего Cloudflare Worker, например 'https://wardrobe-search.ИМЯ.workers.dev/'
-let RS={q:'',cat:'',list:[],st:'',note:''},FS={q:'',list:[],st:'',note:''};
+let FMODE='pick',RS={q:'',cat:'',list:[],st:'',note:''},FS={q:'',list:[],st:'',note:''};
 function szQ(cat){if(SZO==='all')return'';const z=zEff(),v=cat==='Обувь'?z.shoe&&'EU '+z.shoe:['Брюки','Джинсы'].includes(cat)?z.bot:cat==='Аксессуары'?'':z.top;return v?'&size='+encodeURIComponent(v):''}
 const card=(r,act,lbl)=>`<div class="it" data-a="${act}" data-id="${E(String(r.id))}"><img class="ph" src="${E(r.img)}" alt="${E(r.title)}" loading="lazy" referrerpolicy="no-referrer" style="aspect-ratio:1/1;object-fit:cover;width:100%"><div style="font-size:13px;font-weight:600;margin-top:6px">${E(r.title)}</div><div class="sub" style="font-size:12px">${E(r.brand)}${r.size?' · '+E(r.size):''} · $${Math.round(r.price)}</div><div class="b sm" style="margin-top:6px">${lbl}</div></div>`;
 function fresHTML(){
   if(FS.st==='load')return msg('Ищем…');if(FS.st==='err')return msg('Не удалось загрузить. Попробуйте другой запрос.');if(FS.st==='empty')return msg('Ничего не найдено в вашем размере.');
   if(!FS.list.length)return'';
-  return(FS.note?`<p class="sub" style="font-size:12px;margin-top:10px">${FS.note}. Нажмите на вещь, чтобы выбрать.</p>`:'')+`<div class="gr" style="margin-top:10px;grid-template-columns:repeat(auto-fill,minmax(110px,1fr))">${FS.list.map(r=>card(r,'pick','Выбрать')).join('')}</div>`;
+  return(FS.note?`<p class="sub" style="font-size:12px;margin-top:10px">${FS.note}. Нажмите на вещь, чтобы '+(FMODE==='wadd'?'добавить в вишлист':'выбрать')+'.</p>`:'')+`<div class="gr" style="margin-top:10px;grid-template-columns:repeat(auto-fill,minmax(110px,1fr))">${FS.list.map(r=>FMODE==='wadd'?card(r,'wadd','В вишлист'):card(r,'pick','Выбрать')).join('')}</div>`;
 }
 async function fSearch(q){
   q=(q||'').trim();if(!q)return toast('Введите, что искать');
@@ -449,15 +449,51 @@ function vWardrobe(){
   <button class="b g sm" data-a="vw" aria-label="Вид">${I(W.view==='grid'?'list':'grid',18)}</button></div><div id="wl">${wlist()}</div>`;
 }
 
+
+/* ---------- Вишлист ---------- */
+const WL=()=>S.wish||(S.wish=[]);
+const shrink=u=>new Promise(res=>{if(!/^data:/.test(u||''))return res(u||'');const im=new Image();im.onload=()=>{const k=Math.min(1,320/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.6))};im.onerror=()=>res('');im.src=u});
+const wprice=w=>w.price?((w.cur||'₸')==='$'?'$'+Math.round(w.price):Math.round(w.price).toLocaleString('ru-RU')+' ₸'):'';
+function wishListHTML(){
+  const a=WL();
+  return a.length?`<div class="gr" style="margin-top:14px">${a.map(w=>`<div><div class="it" data-a="wEdit" data-id="${w.id}">${w.img?`<img class="ph" src="${E(w.img)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:`<div class="ph">${I('heart',28)}</div>`}<div class="n">${E(w.name)}</div><div class="sub" style="font-size:12.5px">${[w.brand,w.size,wprice(w)].filter(Boolean).map(E).join(' · ')}</div></div><div class="row" style="margin-top:8px;gap:6px"><button class="b sm" data-a="wBuy" data-id="${w.id}">${I('check',14)}Купил</button>${/^https?:/.test(w.url||'')?`<a class="b g sm" target="_blank" rel="noopener" href="${E(w.url)}">Открыть</a>`:''}<button class="b g sm" data-a="wDel" data-id="${w.id}">${I('trash',14)}</button></div></div>`).join('')}</div>`
+  :empty('heart','Вишлист пуст. Найдите вещь поиском выше или добавьте вручную.');
+}
+function vWish(){
+  if(FMODE!=='wadd'){FMODE='wadd';FS={q:'',list:[],st:'',note:''}}
+  return`<div class="c"><h2>Найти вещь</h2><div class="row" style="flex-wrap:nowrap"><input class="in" id="fq" placeholder="Например: carhartt detroit jacket" value="${E(FS.q)}"><button class="b" data-a="fsrch">Найти</button></div><div class="row" style="margin-top:8px"><span class="sub" style="font-size:13px">Размер:</span>${szSel()}</div><div id="fres">${fresHTML()}</div></div>
+  <div class="c"><div class="row sp"><h2 style="margin:0">Мой вишлист <span class="sub" style="font-weight:400">${WL().length||''}</span></h2><button class="b g sm" data-a="newW">${I('plus',14)}Вручную</button></div><div id="wlst">${wishListHTML()}</div></div>`;
+}
+function openWish(id){
+  const w=id?WL().find(x=>x.id===id):{name:'',brand:'',size:'',price:'',url:'',img:'',note:'',cur:'₸'};
+  PH=w.img||'';
+  modal(`<h2>${id?'Редактировать':'Добавить в вишлист'}</h2><div id="pv">${PH?`<img class="ph" style="max-height:200px;width:auto;margin:auto" src="${E(PH)}" alt="" referrerpolicy="no-referrer">`:''}</div>
+  <label class="lb">Фото</label><input type="file" accept="image/*" id="fi" class="in">
+  <label class="lb">Ссылка на фото (необязательно)</label><input class="in" id="fph" type="url" placeholder="https://..." value="${/^https?:/.test(w.img||'')?E(w.img):''}">
+  <label class="lb">Название</label><input class="in" id="wn" value="${E(w.name)}" placeholder="Например: Stone Island худи">
+  <div class="r2"><div><label class="lb">Бренд</label><input class="in" id="wb" value="${E(w.brand)}"></div><div><label class="lb">Размер</label><input class="in" id="wsz" value="${E(w.size)}" placeholder="M / EU 42"></div></div>
+  <div class="r2"><div><label class="lb">Цена, ${w.cur||'₸'}</label><input class="in" id="wp" type="number" inputmode="decimal" value="${w.price||''}"></div><div></div></div>
+  <label class="lb">Ссылка на товар</label><input class="in" id="wu" type="url" placeholder="https://..." value="${E(w.url||'')}">
+  <label class="lb">Заметки</label><textarea class="in" id="wz" rows="2">${E(w.note||'')}</textarea>
+  <div class="row" style="margin-top:16px"><button class="b" data-a="saveW" data-id="${id||''}">Сохранить</button><button class="b g" data-a="cl">Отмена</button></div>`);
+}
+async function saveWish(id){
+  const name=$('#wn').value.trim();if(!name)return toast('Введите название');
+  const img=await shrink(PH),p=parseFloat($('#wp').value),u=$('#wu').value.trim();
+  const d={name,brand:$('#wb').value.trim(),size:$('#wsz').value.trim(),price:p>0?p:null,url:u&&!/^https?:\/\//i.test(u)?'https://'+u:u,img,note:$('#wz').value.trim()};
+  if(id)Object.assign(WL().find(x=>x.id===id),d);else WL().unshift({id:uid(),added:Date.now(),cur:'₸',...d});
+  save();closeM();render();toast('Сохранено в вишлист');
+}
+
 function vOutfits(){
   let h='';
-  if(OT==='saved')h=S.outfits.length?S.outfits.map(o=>`<div class="c"><div class="row sp"><b>${E(o.name)}</b><button class="ib${o.fav?' on':''}" data-a="favO" data-id="${o.id}">${I('heart',18)}</button></div>${strip(o.ids)}
+  if(OT==='wish')h=vWish();else if(OT==='saved')h=S.outfits.length?S.outfits.map(o=>`<div class="c"><div class="row sp"><b>${E(o.name)}</b><button class="ib${o.fav?' on':''}" data-a="favO" data-id="${o.id}">${I('heart',18)}</button></div>${strip(o.ids)}
     <div class="row" style="margin-top:12px"><button class="b sm" data-a="wearO" data-id="${o.id}">Надеть</button><button class="b g sm" data-a="editO" data-id="${o.id}">Изменить</button><button class="b g sm" data-a="delO" data-id="${o.id}">${I('trash',14)}</button></div></div>`).join('')
     :empty('layers','Сохранённых образов нет. Создайте образ в конструкторе или сохраните рекомендацию на экране «Сегодня».');
   else h=S.history.length?S.history.map(x=>`<div class="c"><div class="row sp"><b>${new Date(x.date+'T12:00').toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'})}</b><button class="b g sm" data-a="undo" data-id="${x.id}">${I('undo',14)}Отменить</button></div><div style="margin-top:10px">${strip(x.ids)}</div></div>`).join('')
     :empty('layers','История пуста. Нажмите «Надеть», чтобы записать образ.');
-  return`<div class="row sp" style="margin-bottom:16px"><h1>Образы</h1><button class="b" data-a="newO">${I('plus',16)}Создать</button></div>
-  <div class="row" style="margin-bottom:16px"><button class="b${OT==='saved'?'':' g'} sm" data-a="tab" data-id="saved">Сохранённые</button><button class="b${OT==='hist'?'':' g'} sm" data-a="tab" data-id="hist">История</button></div>${h}`;
+  return`<div class="row sp" style="margin-bottom:16px"><h1>${OT==='wish'?'Вишлист':'Образы'}</h1>${OT==='wish'?'':`<button class="b" data-a="newO">${I('plus',16)}Создать</button>`}</div>
+  <div class="row" style="margin-bottom:16px"><button class="b${OT==='saved'?'':' g'} sm" data-a="tab" data-id="saved">Сохранённые</button><button class="b${OT==='hist'?'':' g'} sm" data-a="tab" data-id="hist">История</button><button class="b${OT==='wish'?'':' g'} sm" data-a="tab" data-id="wish">${I('heart',14)}Вишлист</button></div>${h}`;
 }
 
 function bars(o){const m=Math.max(1,...Object.values(o));const e=Object.entries(o).filter(x=>x[1]);return e.length?e.map(([k,v])=>`<div class="bar"><span>${k}</span><i style="width:${v/m*55}%"></i><span style="color:var(--t)">${v}</span></div>`).join(''):'<p class="sub">Нет данных</p>'}
@@ -504,7 +540,7 @@ function render(){
 const sel=(id,a,v)=>`<select class="in" id="${id}">${a.map(x=>`<option${x===v?' selected':''}>${E(x)}</option>`).join('')}</select>`;
 function openItem(id){
   const i=id?gI(id):{name:'',cat:'Футболки',color:'Чёрный',season:'Всесезонный',brand:'',price:'',tags:[],notes:'',fav:false,laundry:false,photo:'',url:''};
-  PH=i.photo;if(!id)FS={q:'',list:[],st:'',note:''};
+  PH=i.photo;if(!id){FMODE='pick';FS={q:'',list:[],st:'',note:''}}
   modal(`<h2>${id?'Редактировать вещь':'Новая вещь'}</h2><div id="pv">${PH?`<img class="ph" style="max-height:220px;width:auto;margin:auto" src="${PH}" alt="">`:''}</div>
   ${id?'':`<label class="lb">Найти вещь на Grailed</label><div class="row" style="flex-wrap:nowrap"><input class="in" id="fq" placeholder="Например: stone island hoodie"><button class="b" data-a="fsrch">Найти</button></div><div class="row" style="margin-top:8px"><span class="sub" style="font-size:13px">Размер:</span>${szSel()}</div><div id="fres">${fresHTML()}</div><p class="sub" style="font-size:12px;margin-top:10px">Или заполните вручную ниже.</p>`}
   <label class="lb">Фото</label><input type="file" accept="image/*" id="fi" class="in">
@@ -581,7 +617,15 @@ document.addEventListener('click',e=>{
     vw(){W.view=W.view==='grid'?'list':'grid';render()},
     saveI(){saveItem(id)},
     delI(){ask('Удалить вещь? Она также исчезнет из сохранённых образов.',()=>{S.items=S.items.filter(x=>x.id!==id);S.outfits.forEach(o=>o.ids=o.ids.filter(x=>x!==id));G=null;save();render();toast('Вещь удалена')})},
-    tab(){OT=id;render()},newO(){openOutfit()},editO(){openOutfit(id)},saveO(){saveOutfit(id)},
+    tab(){OT=id;render()},newW(){openWish()},wEdit(){openWish(id)},saveW(){saveWish(id)},
+    wadd(){const r=FS.list.find(x=>String(x.id)===id);if(!r)return;if(WL().some(w=>w.url&&w.url===r.url))return toast('Уже в вишлисте');
+      WL().unshift({id:uid(),added:Date.now(),name:r.title,brand:r.brand||'',size:r.size||'',price:r.price||null,cur:'$',url:r.url||'',img:r.img||'',note:'Grailed'});
+      save();const e=$('#wlst');if(e)e.innerHTML=wishListHTML();toast('Добавлено в вишлист')},
+    wDel(){ask('Удалить из вишлиста?',()=>{S.wish=WL().filter(x=>x.id!==id);save();const e=$('#wlst');if(e)e.innerHTML=wishListHTML();toast('Удалено')})},
+    wBuy(){const w=WL().find(x=>x.id===id);if(!w)return;const t=w.name.toLowerCase(),col=Object.keys(CEN).find(k=>t.includes(CEN[k]))||'Другой';
+      S.items.push({id:uid(),wears:0,created:Date.now(),name:w.name,cat:guessCat(t,'Футболки'),color:col,season:'Всесезонный',price:null,brand:w.brand||'',tags:[],notes:w.note||'',fav:false,laundry:false,photo:w.img||'',url:w.url||''});
+      S.wish=WL().filter(x=>x.id!==id);G=null;save();render();toast('Перенесено в гардероб')},
+    newO(){openOutfit()},editO(){openOutfit(id)},saveO(){saveOutfit(id)},
     favO(){const o=S.outfits.find(x=>x.id===id);o.fav=!o.fav;save();render()},
     wearO(){const o=S.outfits.find(x=>x.id===id);if(o.ids.some(x=>gI(x)&&gI(x).laundry))return toast('В образе есть вещь в стирке');wear(o.ids)},
     delO(){ask('Удалить образ?',()=>{S.outfits=S.outfits.filter(x=>x.id!==id);save();render()})},
