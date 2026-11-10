@@ -63,6 +63,39 @@ main{margin-left:0;padding:calc(64px + 36px + env(safe-area-inset-top,0px)) 32px
 .lp .ey{letter-spacing:.18em;font-size:12px;margin-bottom:20px}.lp .ld{font-size:19px;margin:20px auto 32px;max-width:480px}
 .lp .g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}.lp .g3 .c{margin:0}
 .lp .ab{text-align:center;max-width:560px;margin:64px auto 40px}.lp footer{text-align:center;font-size:13px}
+/* ---------- анимации в стиле macOS ---------- */
+:root{--ease:cubic-bezier(.22,1,.36,1);--spring:cubic-bezier(.34,1.56,.64,1)}
+body{transition:background-color .45s var(--ease),color .45s var(--ease)}
+.c,.in,.md,nav,.tag{transition:background-color .45s var(--ease),border-color .3s,box-shadow .35s var(--ease),transform .4s var(--ease)}
+@keyframes pgin{from{opacity:0;transform:translateY(14px) scale(.992);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes pop{from{opacity:0;transform:translateY(18px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}}
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes mdin{from{opacity:0;transform:translateY(40px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes mdout{to{opacity:0;transform:translateY(30px) scale(.97)}}
+@keyframes ovout{to{opacity:0}}
+.pg{animation:pgin .5s var(--ease)}
+.pg>.c{animation:pop .6s var(--ease) both}
+.pg>.c:nth-child(2){animation-delay:.05s}.pg>.c:nth-child(3){animation-delay:.1s}.pg>.c:nth-child(4){animation-delay:.15s}.pg>.c:nth-child(n+5){animation-delay:.2s}
+.pg .gr>*,#sres .gr>*,#fres .gr>*{animation:pop .55s var(--ease) both}
+.pg .gr>:nth-child(1),#sres .gr>:nth-child(1),#fres .gr>:nth-child(1){animation-delay:0.04s}.pg .gr>:nth-child(2),#sres .gr>:nth-child(2),#fres .gr>:nth-child(2){animation-delay:0.08s}.pg .gr>:nth-child(3),#sres .gr>:nth-child(3),#fres .gr>:nth-child(3){animation-delay:0.12s}.pg .gr>:nth-child(4),#sres .gr>:nth-child(4),#fres .gr>:nth-child(4){animation-delay:0.16s}.pg .gr>:nth-child(5),#sres .gr>:nth-child(5),#fres .gr>:nth-child(5){animation-delay:0.20s}.pg .gr>:nth-child(6),#sres .gr>:nth-child(6),#fres .gr>:nth-child(6){animation-delay:0.24s}.pg .gr>:nth-child(7),#sres .gr>:nth-child(7),#fres .gr>:nth-child(7){animation-delay:0.28s}.pg .gr>:nth-child(8),#sres .gr>:nth-child(8),#fres .gr>:nth-child(8){animation-delay:0.32s}.pg .gr>:nth-child(9),#sres .gr>:nth-child(9),#fres .gr>:nth-child(9){animation-delay:0.36s}.pg .gr>:nth-child(10),#sres .gr>:nth-child(10),#fres .gr>:nth-child(10){animation-delay:0.40s}.pg .gr>:nth-child(11),#sres .gr>:nth-child(11),#fres .gr>:nth-child(11){animation-delay:0.44s}.pg .gr>:nth-child(12),#sres .gr>:nth-child(12),#fres .gr>:nth-child(12){animation-delay:0.48s}.pg .gr>:nth-child(13),#sres .gr>:nth-child(13),#fres .gr>:nth-child(13){animation-delay:0.52s}.pg .gr>:nth-child(14),#sres .gr>:nth-child(14),#fres .gr>:nth-child(14){animation-delay:0.56s}
+.pg .bar i{transform-origin:left;animation:grow .9s var(--ease) .15s both}
+img.ph{animation:fade .6s var(--ease)}
+.ov{backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2);animation:fade .3s var(--ease)}
+.ov.out{animation:ovout .22s ease forwards}.ov.out .md{animation:mdout .22s ease forwards}
+.md{animation:mdin .5s var(--ease)}
+.tt{animation:pop .45s var(--spring)}
+.b{transition:transform .35s var(--spring),opacity .2s,background-color .25s,box-shadow .3s var(--ease)}
+.b:active{transform:scale(.94)}
+.in:focus{outline:0;border-color:#0a84ff;box-shadow:0 0 0 4px rgba(10,132,255,.18)}
+nav button:active{transform:scale(.94)}nav button{transition:transform .3s var(--spring),background-color .25s var(--ease),color .25s}
+@media(hover:hover){
+.b:hover{opacity:.88;transform:translateY(-1px)}.b:active{transform:scale(.94)}
+.it{transition:transform .45s var(--ease)}.it:hover{transform:translateY(-5px)}.it:hover .ph{box-shadow:0 14px 30px rgba(0,0,0,.18)}.it:active{transform:scale(.97)}
+.it .ph{transition:box-shadow .45s var(--ease)}
+.li{transition:padding .3s var(--ease),background-color .25s}.li:hover{padding-left:8px}
+.c:hover{box-shadow:0 8px 28px rgba(0,0,0,.08)}}
+@media(min-width:800px){.ov{align-items:center}.md{border-radius:26px;padding-bottom:22px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 a.b{text-decoration:none}.sz{font-size:40px;font-weight:600;letter-spacing:-.03em;line-height:1}
 </style>
@@ -104,7 +137,7 @@ const uid=()=>Math.random().toString(36).slice(2,10)+Date.now().toString(36).sli
 const day=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 const money=n=>Math.round(n).toLocaleString('ru-RU')+' ₸';
 let S={v:2,name:'',theme:'light',city:0,items:[],outfits:[],history:[]};
-let V='today',G=null,WX=null,WS='load',MAN=null,PH='',CB=null,W={q:'',cat:'',sort:'new',view:'grid'},OT='saved',LAND=true;
+let LV='',V='today',G=null,WX=null,WS='load',MAN=null,PH='',CB=null,W={q:'',cat:'',sort:'new',view:'grid'},OT='saved',LAND=true;
 
 /* ---------- IndexedDB ---------- */
 let DBP=null;
@@ -259,7 +292,7 @@ function toast(m,fn){
   $('#ts').appendChild(d);setTimeout(()=>d.remove(),5000);
 }
 function modal(h){$('#mo').innerHTML=`<div class="ov"><div class="md">${h}</div></div>`}
-function closeM(){$('#mo').innerHTML=''}
+function closeM(){const o=$('#mo .ov');if(!o){$('#mo').innerHTML='';return}o.classList.add('out');setTimeout(()=>{if(o.isConnected)$('#mo').innerHTML=''},230)}
 function ask(msg,fn){CB=fn;modal(`<h2>Подтверждение</h2><p class="sub">${E(msg)}</p><div class="row" style="margin-top:18px"><button class="b" data-a="yes">Подтвердить</button><button class="b g" data-a="cl">Отмена</button></div>`)}
 const gI=id=>S.items.find(x=>x.id===id);
 function applyTheme(){const r=document.documentElement;S.theme==='system'?r.removeAttribute('data-theme'):r.setAttribute('data-theme',S.theme)}
@@ -459,7 +492,7 @@ function render(){
   if(!AU){$('#app').innerHTML=landing();return}
   if(!S.name){$('#app').innerHTML=`<main style="margin:0"><div class="wrap" style="max-width:420px;padding-top:12vh"><h1>WARDROBE OS</h1><p class="sub" style="margin:8px 0 24px">Ваш личный гардероб. Как вас зовут?</p><input class="in" id="nm" placeholder="Имя" autocomplete="given-name"><button class="b" data-a="start" style="margin-top:14px">Начать</button></div></main>`;return}
   const v={today:vToday,wardrobe:vWardrobe,outfits:vOutfits,stats:vStats,set:vSet}[V]();
-  $('#app').innerHTML=`<nav><div class="br">WARDROBE OS</div>${N.map(n=>`<button class="${n[0]===V?'on ':''}${n[0]==='set'?'set':''}" data-a="go" data-id="${n[0]}">${I(n[2],22)}${n[1]}</button>`).join('')}</nav><main><div class="wrap">${v}</div></main>`;
+  $('#app').innerHTML=`<nav><div class="br">WARDROBE OS</div>${N.map(n=>`<button class="${n[0]===V?'on ':''}${n[0]==='set'?'set':''}" data-a="go" data-id="${n[0]}">${I(n[2],22)}${n[1]}</button>`).join('')}</nav><main><div class="wrap${V!==LV?' pg':''}">${v}</div></main>`;LV=V;
 }
 
 /* ---------- Формы ---------- */
